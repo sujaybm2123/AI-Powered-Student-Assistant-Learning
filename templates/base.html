@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EduAI Nexus — Intelligent Learning Ecosystem{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Active Loading Screen -->
+    <div id="loaderOverlay" class="overlay-loader">
+        <div class="loader-spinner"></div>
+        <h4>Processing...</h4>
+        <p class="text-muted">Please wait while EduAI performs the operation.</p>
+    </div>
+
+    <!-- Toast Alerts -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="toast-custom-container">
+        {% for category, message in messages %}
+        <div class="toast-custom {{ category }}" onclick="this.remove()">
+            {% if category == 'success' %}
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+            {% elif category == 'danger' %}
+            <i class="bi bi-exclamation-octagon-fill text-danger fs-5"></i>
+            {% else %}
+            <i class="bi bi-info-circle-fill text-warning fs-5"></i>
+            {% endif %}
+            <div class="fw-bold text-light-dark">{{ message }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+
+
+    <!-- Mobile Top Navigation (Visible only on small screens) -->
+    <div class="mobile-topbar d-lg-none">
+        <a href="{{ url_for('home') }}" class="mobile-brand">
+            <i class="bi bi-cpu text-primary"></i> EduAI
+        </a>
+        <button class="sidebar-hamburger" id="sidebarTrigger" title="Toggle Navigation">
+            <i class="bi bi-list"></i>
+        </button>
+    </div>
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar-wrapper" id="sidebarMenu">
+        <a href="{{ url_for('home') }}" class="sidebar-logo">
+            <div class="sidebar-logo-icon">
+                <i class="bi bi-cpu"></i>
+            </div>
+            <span class="sidebar-logo-name">EduAI Nexus</span>
+        </a>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="{{ url_for('home') }}" class="sidebar-link {% if request.endpoint == 'home' %}active{% endif %}">
+                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('flashcards_spaced') }}" class="sidebar-link {% if request.endpoint == 'flashcards_spaced' %}active{% endif %}">
+                    <i class="bi bi-card-text"></i> Spaced Repetition
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('semester_predictor') }}" class="sidebar-link {% if request.endpoint == 'semester_predictor' %}active{% endif %}">
+                    <i class="bi bi-graph-up"></i> GPA Predictor
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('career_navigator') }}" class="sidebar-link {% if request.endpoint == 'career_navigator' %}active{% endif %}">
+                    <i class="bi bi-compass"></i> Career Readiness
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('research_lab') }}" class="sidebar-link {% if request.endpoint == 'research_lab' %}active{% endif %}">
+                    <i class="bi bi-journals"></i> Research Assistant
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('leaderboard') }}" class="sidebar-link {% if request.endpoint == 'leaderboard' %}active{% endif %}">
+                    <i class="bi bi-trophy"></i> Leaderboard
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('admin_panel') }}" class="sidebar-link {% if request.endpoint == 'admin_panel' %}active{% endif %}">
+                    <i class="bi bi-shield-lock"></i> Admin Panel
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <span class="text-muted fs-8">Profile: <strong>{{ session.username if session.username else 'Sujay' }}</strong></span>
+            <button id="themeToggleBtn" class="theme-toggle" title="Toggle Light/Dark Theme">
+                <i class="bi bi-moon-stars"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Workspace Area -->
+    <main class="main-workspace">
+        <div class="container-fluid py-2">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // ---- Theme Manager ----
+        const toggleBtn = document.getElementById('themeToggleBtn');
+        const applyTheme = (theme) => {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            if (toggleBtn) {
+                toggleBtn.innerHTML = theme === 'dark' ? '<i class="bi bi-sun-fill text-warning"></i>' : '<i class="bi bi-moon-stars"></i>';
+            }
+        };
+        applyTheme(localStorage.getItem('theme') || 'light');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                const nextTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                applyTheme(nextTheme);
+                if (typeof updateChartColors === 'function') {
+                    updateChartColors();
+                }
+            });
+        }
+
+
+        // ---- Hamburger Menu for mobile responsive ----
+        const sidebar = document.getElementById('sidebarMenu');
+        const sidebarTrigger = document.getElementById('sidebarTrigger');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        }
+        
+        if (sidebarTrigger && sidebar) {
+            sidebarTrigger.addEventListener('click', toggleSidebar);
+        }
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', toggleSidebar);
+        }
+
+        // ---- Auto-dismiss Toast Alerts after 2 seconds ----
+        const toasts = document.querySelectorAll('.toast-custom');
+        toasts.forEach(toast => {
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.5s ease';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 2000);
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

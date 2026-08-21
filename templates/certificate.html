@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Achievement Certificate — EduAI Pro{% endblock %}
+{% block content %}
+<main class="container my-5">
+        
+        <div class="certificate-preview-container">
+            <div class="certificate-border-decor"></div>
+            
+            <div class="my-4">
+                <i class="bi bi-award-fill text-primary" style="font-size: 4.5rem; filter: drop-shadow(0 4px 10px rgba(37,99,235,0.2));"></i>
+            </div>
+            
+            <h1 class="display-6 fw-bold mb-1" style="font-family: var(--font-heading); color: #0f172a;">CERTIFICATE OF ACHIEVEMENT</h1>
+            <p class="text-uppercase tracking-wider text-muted fs-8 fw-semibold mb-5">PROUDLY PRESENTED TO</p>
+            
+            <h2 class="display-4 fw-bold mb-2" style="font-family: var(--font-heading); color: var(--primary);">{{ username }}</h2>
+            <div class="mx-auto bg-primary mb-5" style="width: 250px; height: 3px;"></div>
+            
+            <p class="fs-5 text-muted mb-4" style="line-height: 1.8;">
+                for successfully achieving an outstanding score of <strong class="text-dark">{{ percentage }}%</strong><br>
+                on the diagnostic MCQ assessment based on study notes:<br>
+                <strong class="text-dark">"{{ filename }}"</strong>
+            </p>
+            
+            <div class="row g-3 justify-content-center mt-5 mb-4">
+                <div class="col-md-4 col-6">
+                    <div class="border-top pt-2 text-center">
+                        <span class="d-block fw-bold text-dark fs-7">{{ date }}</span>
+                        <span class="text-muted fs-8">DATE OF AWARD</span>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6">
+                    <div class="border-top pt-2 text-center">
+                        <span class="d-block fw-bold text-dark fs-7" style="font-family: cursive;">EduAI Pro Engine</span>
+                        <span class="text-muted fs-8">AUTHORIZED BY</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print/Download Button -->
+        <div class="text-center print-btn-section mt-4">
+            <button onclick="window.print();" class="btn-premium px-5 py-3">
+                <i class="bi bi-printer"></i> Export / Print Certificate PDF
+            </button>
+            <a href="{{ url_for('home') }}" class="btn btn-premium-outline ms-2 px-4 py-3">
+                Return Dashboard
+            </a>
+        </div>
+
+    </main>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

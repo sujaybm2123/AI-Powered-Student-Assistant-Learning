@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Knowledge Summary — EduAI Pro{% endblock %}
+{% block content %}
+<main class="container my-5" style="max-width: 900px;">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('home') }}" class="btn btn-premium-outline px-3 py-2">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+            <div>
+                <h2 class="mb-0 text-truncate" style="max-width: 500px;">{{ material.filename }}</h2>
+                <p class="text-muted mb-0 fs-7">Generated AI Summary Notebook</p>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <!-- Custom Styled Tabs -->
+            <div class="tabs-custom">
+                <button class="tab-custom-btn active" onclick="switchTab(event, 'detailed')">
+                    <i class="bi bi-book"></i> Detailed Summary
+                </button>
+                <button class="tab-custom-btn" onclick="switchTab(event, 'short')">
+                    <i class="bi bi-bookmark-star"></i> Executive Summary
+                </button>
+                <button class="tab-custom-btn" onclick="switchTab(event, 'revision')">
+                    <i class="bi bi-file-earmark-check"></i> Revision Sheets
+                </button>
+                <button class="tab-custom-btn" onclick="switchTab(event, 'onepage')">
+                    <i class="bi bi-journal-code"></i> Cheat Sheet Notes
+                </button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div id="detailed" class="tab-content-panel active">
+                <div class="p-3 border rounded bg-light-card style-markdown">
+                    <h4 class="mb-3 border-bottom pb-2">Comprehensive Deep-Dive Summary</h4>
+                    <p style="white-space: pre-wrap; line-height: 1.7;">{{ material.summary_detailed }}</p>
+                </div>
+            </div>
+
+            <div id="short" class="tab-content-panel d-none">
+                <div class="p-3 border rounded bg-light-card style-markdown">
+                    <h4 class="mb-3 border-bottom pb-2">Short Concept Snapshot</h4>
+                    <p style="white-space: pre-wrap; line-height: 1.7; font-size: 1.1rem; font-weight: 500;">{{ material.summary_short }}</p>
+                </div>
+            </div>
+
+            <div id="revision" class="tab-content-panel d-none">
+                <div class="p-3 border rounded bg-light-card style-markdown">
+                    <h4 class="mb-3 border-bottom pb-2">Key Formulae & Definitions</h4>
+                    <p style="white-space: pre-wrap; line-height: 1.7;">{{ material.summary_revision }}</p>
+                </div>
+            </div>
+
+            <div id="onepage" class="tab-content-panel d-none">
+                <div class="p-3 border rounded bg-light-card style-markdown">
+                    <h4 class="mb-3 border-bottom pb-2">One-Page Outline / Cheat Sheet</h4>
+                    <p style="white-space: pre-wrap; line-height: 1.7;">{{ material.summary_onepage }}</p>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+        // ---- Custom Switch Tabs ----
+        function switchTab(evt, tabId) {
+            // Remove active classes
+            document.querySelectorAll('.tab-custom-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content-panel').forEach(panel => panel.classList.add('d-none'));
+
+            // Set active targets
+            evt.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.remove('d-none');
+        }
+    </script>
+
+{% endblock %}

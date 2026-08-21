@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}GPA Predictor — EduAI Nexus{% endblock %}
+{% block extra_head %}
+    <style>
+        .gpa-ring {
+            width: 200px; height: 200px; border-radius: 50%;
+            background: conic-gradient(#2563eb {{ ((predicted_gpa|default(0)) / 10 * 360)|int }}deg, var(--ring-bg) 0deg);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto; position: relative;
+        }
+        .gpa-ring-inner {
+            width: 160px; height: 160px; border-radius: 50%;
+            background: var(--bg-surface); display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .grade-badge {
+            font-size: 2.5rem; font-weight: 800;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+<div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold"><i class="bi bi-graph-up text-primary"></i> GPA Predictor</h1>
+            <p class="text-muted">Predicted academic performance based on your quiz history</p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            <!-- GPA Ring -->
+            <div class="col-lg-4 col-md-6">
+                <div class="glass-card text-center">
+                    <h5 class="mb-4">Predicted CGPA</h5>
+                    <div class="gpa-ring">
+                        <div class="gpa-ring-inner">
+                            <span class="grade-badge">{{ predicted_gpa }}</span>
+                            <span class="text-muted fs-7">/ 10.0</span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="badge bg-primary fs-6 px-3 py-2">Grade: {{ grade }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="col-lg-4 col-md-6">
+                <div class="glass-card h-100">
+                    <h5 class="mb-4"><i class="bi bi-speedometer2 text-primary me-2"></i>Performance Metrics</h5>
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Total Assessments</span>
+                            <span class="fw-bold">{{ total_assessments }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Average Score</span>
+                            <span class="fw-bold text-primary">{{ avg_pct }}%</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Predicted GPA</span>
+                            <span class="fw-bold">{{ predicted_gpa }} / 10</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2">
+                            <span class="text-muted">Expected Grade</span>
+                            <span class="fw-bold badge bg-success">{{ grade }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GPA Scale Reference -->
+            <div class="col-lg-4 col-md-12">
+                <div class="glass-card h-100">
+                    <h5 class="mb-4"><i class="bi bi-list-check text-primary me-2"></i>Grading Scale</h5>
+                    <div class="border-top pt-3 d-flex flex-column gap-2">
+                        {% set grades = [('O', '90-100%', 'success'), ('A+', '80-89%', 'primary'), ('A', '70-79%', 'info'), ('B+', '60-69%', 'warning'), ('B', '50-59%', 'secondary'), ('C', 'Below 50%', 'danger')] %}
+                        {% for g, range, color in grades %}
+                        <div class="d-flex justify-content-between align-items-center py-1 {% if grade == g %}border rounded px-2 border-{{ color }}{% endif %}">
+                            <span class="badge bg-{{ color }} px-3">{{ g }}</span>
+                            <span class="fs-7 text-muted">{{ range }}</span>
+                            {% if grade == g %}<i class="bi bi-arrow-left-short text-{{ color }} fw-bold"></i>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assessment History -->
+        {% if records %}
+        <div class="glass-card mt-4">
+            <h5 class="mb-3"><i class="bi bi-clock-history text-primary me-2"></i>Assessment History</h5>
+            <div class="table-responsive border-top pt-3">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="fs-8 text-muted">Subject</th>
+                            <th class="fs-8 text-muted">Difficulty</th>
+                            <th class="fs-8 text-muted">Score</th>
+                            <th class="fs-8 text-muted">%</th>
+                            <th class="fs-8 text-muted">Readiness</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in records %}
+                        <tr>
+                            <td class="fs-7">{{ r.filename }}</td>
+                            <td><span class="badge {% if r.difficulty == 'Hard' %}bg-danger{% elif r.difficulty == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %} fs-8">{{ r.difficulty }}</span></td>
+                            <td class="fs-7 font-monospace">{{ r.score }}/{{ r.total }}</td>
+                            <td class="fw-bold fs-7 {% if r.percentage >= 80 %}text-success{% elif r.percentage >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ r.percentage }}%</td>
+                            <td class="fs-7">{{ r.readiness_score or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="glass-card mt-4 text-center py-5">
+            <i class="bi bi-journal-x fs-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">No Assessment Data</h5>
+            <p class="text-muted">Take quizzes to get GPA predictions based on your performance.</p>
+            <a href="{{ url_for('home') }}" class="btn-premium px-4 py-2">Upload & Start Quiz</a>
+        </div>
+        {% endif %}
+    </div>
+
+    
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

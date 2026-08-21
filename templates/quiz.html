@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Syllabus Quiz Session — EduAI Pro{% endblock %}
+{% block content %}
+<main class="container my-5" style="max-width: 780px;">
+        
+        <div class="mb-4">
+            <h2 class="mb-1">Active Assessment</h2>
+            <p class="text-muted"><i class="bi bi-file-earmark-text"></i> Source: {{ filename }}</p>
+        </div>
+
+        <!-- Progress Tracker Card -->
+        <div class="glass-card mb-4 p-3 d-flex flex-column gap-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="fs-7 fw-bold"><i class="bi bi-patch-question-fill text-primary"></i> Progress Tracker</span>
+                <span class="fs-7 text-muted fw-bold"><span id="answeredIndex">0</span> / {{ total }} Answered</span>
+            </div>
+            <div class="progress" style="height: 8px; background-color: var(--ring-bg); border-radius: 4px; overflow: hidden;">
+                <div class="progress-bar bg-primary" id="quizProgressBar" role="progressbar" style="width: 0%; transition: width 0.3s ease;"></div>
+            </div>
+        </div>
+
+        <form action="{{ url_for('quiz_submit') }}" method="POST" id="activeQuizForm">
+            {% for index, item in quiz %}
+                <div class="glass-card mb-4 p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-primary fs-8 py-2 px-3 fw-bold">QUESTION {{ index + 1 }}</span>
+                    </div>
+                    
+                    <h5 class="mb-4 lh-base">{{ item.question }}</h5>
+                    
+                    <div class="d-flex flex-column gap-2">
+                        {% for option in item.options %}
+                            <label class="custom-option-label">
+                                <input type="radio" name="q{{ index }}" value="{{ option }}" class="custom-option-input quiz-option-radio">
+                                <span class="fs-6">{{ option }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+
+            <!-- Form Submit Actions -->
+            <div class="text-center mt-5 mb-3">
+                <button type="submit" class="btn-premium w-100 py-3" style="max-width: 380px;">
+                    Submit Completed Exam <i class="bi bi-send"></i>
+                </button>
+                <p class="text-muted fs-8 mt-2">Make sure all questions have been reviewed before submitting.</p>
+            </div>
+        </form>
+
+    </main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+        // ---- Answer Tracker & Progress ----
+        const totalItems = {{ total }};
+        const radios = document.querySelectorAll('.quiz-option-radio');
+        const answeredIndex = document.getElementById('answeredIndex');
+        const progressBar = document.getElementById('quizProgressBar');
+
+        function evaluateProgress() {
+            const answeredNames = new Set();
+            radios.forEach(r => {
+                if (r.checked) {
+                    answeredNames.add(r.name);
+                }
+            });
+            const answeredCount = answeredNames.size;
+            answeredIndex.textContent = answeredCount;
+            progressBar.style.width = (answeredCount / totalItems * 100) + '%';
+        }
+
+        radios.forEach(r => r.addEventListener('change', evaluateProgress));
+
+        // Incomplete submit confirmation
+        const form = document.getElementById('activeQuizForm');
+        form.addEventListener('submit', (e) => {
+            const answeredNames = new Set();
+            radios.forEach(r => {
+                if (r.checked) {
+                    answeredNames.add(r.name);
+                }
+            });
+            
+            if (answeredNames.size < totalItems) {
+                const proceed = confirm(`You have only completed ${answeredNames.size} of ${totalItems} questions. Are you sure you want to submit?`);
+                if (!proceed) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+            
+            // Activate loader overlay
+            document.getElementById('loaderOverlay').classList.add('active');
+        });
+    </script>
+
+{% endblock %}

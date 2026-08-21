@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Platform Leaderboard — EduAI Pro{% endblock %}
+{% block content %}
+<main class="container my-5" style="max-width: 800px;">
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold mb-2">🏆 Performance Rankings</h1>
+            <p class="text-muted">Compare learning metrics with active student ranks.</p>
+            <div class="section-divider mx-auto"></div>
+        </div>
+
+        <div class="glass-card p-4">
+            <div class="table-responsive">
+                <table class="table table-custom">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Rank</th>
+                            <th>Student profile</th>
+                            <th class="text-center">Quizzes taken</th>
+                            <th class="text-center">Average score</th>
+                            <th class="text-center">Improvement</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rank in ranks %}
+                            <tr>
+                                <td class="text-center fw-bold fs-5" style="width: 80px;">
+                                    {% if rank.rank == 1 %}
+                                        🥇
+                                    {% elif rank.rank == 2 %}
+                                        🥈
+                                    {% elif rank.rank == 3 %}
+                                        🥉
+                                    {% else %}
+                                        <span class="text-muted">#{{ rank.rank }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="leaderboard-avatar">
+                                            {{ rank.username[0]|upper }}
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold d-block">{{ rank.username }}</span>
+                                            {% if rank.username == session['username'] %}
+                                                <span class="badge bg-primary-light text-primary fs-9 py-0">You</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center fw-bold">{{ rank.quizzes_taken }}</td>
+                                <td class="text-center fw-bold text-success fs-5">{{ rank.avg_score }}%</td>
+                                <td class="text-center text-accent font-monospace">
+                                    {{ '+' if rank.improvement > 0 else '' }}{{ rank.improvement }}%
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

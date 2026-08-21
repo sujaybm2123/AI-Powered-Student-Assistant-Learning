@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% block title %}EduAI Nexus{% endblock %}
+{% block extra_head %}
+    <style>
+        .chat-bubble {
+            max-width: 85%; padding: 1rem 1.25rem; border-radius: 16px;
+            margin-bottom: 0.75rem; line-height: 1.6; font-size: 0.95rem;
+            animation: fadeSlideUp 0.3s ease;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-user {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white; margin-left: auto; border-bottom-right-radius: 4px;
+        }
+        .chat-ai {
+            background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.1);
+            border-bottom-left-radius: 4px;
+        }
+        .chat-container {
+            height: 450px; overflow-y: auto; padding: 1.5rem;
+            display: flex; flex-direction: column;
+        }
+        .chat-container::-webkit-scrollbar { width: 4px; }
+        .chat-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        .typing-indicator { display: flex; gap: 4px; padding: 0.5rem; }
+        .typing-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: #2563eb;
+            animation: typingBounce 1.4s ease-in-out infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+    </style>
+{% endblock %}
+{% block content %}
+<div class="container py-5">
+        <div class="text-center mb-4">
+            <h1 class="display-5 fw-bold"><i class="bi bi-journals text-primary"></i> Research Assistant</h1>
+            <p class="text-muted">Ask questions about your study materials and get AI-powered answers</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="glass-card p-0 overflow-hidden">
+                    <!-- Chat Area -->
+                    <div class="chat-container" id="chatContainer">
+                        <div class="chat-bubble chat-ai">
+                            <strong><i class="bi bi-robot"></i> EduAI Research Bot</strong><br>
+                            Hello! I can answer questions about your uploaded study materials. Select a module and ask me anything!
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="p-3 border-top">
+                        <form id="researchForm" onsubmit="askQuestion(event)">
+                            <div class="d-flex gap-2">
+                                <select class="form-select" id="materialSelect" style="max-width: 200px;">
+                                    <option value="all">All Materials</option>
+                                    {% for mat in materials %}
+                                    <option value="{{ mat.id }}">{{ mat.filename }}</option>
+                                    {% endfor %}
+                                </select>
+                                <input type="text" class="form-control" id="questionInput" placeholder="Ask a question about your notes..." required autocomplete="off">
+                                <button type="submit" class="btn-premium px-3" id="sendBtn">
+                                    <i class="bi bi-send-fill"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Sidebar -->
+            <div class="col-lg-4">
+                <div class="glass-card mb-3">
+                    <h5 class="mb-3"><i class="bi bi-lightning-charge text-warning me-2"></i>Quick Prompts</h5>
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-sm btn-premium-outline text-start py-2 px-3 fs-7" onclick="quickAsk('Summarize the key concepts in this material')">
+                            <i class="bi bi-chat-quote"></i> Summarize key concepts
+                        </button>
+                        <button class="btn btn-sm btn-premium-outline text-start py-2 px-3 fs-7" onclick="quickAsk('What are the most important formulas or definitions?')">
+                            <i class="bi bi-calculator"></i> Important formulas & definitions
+                        </button>
+                        <button class="btn btn-sm btn-premium-outline text-start py-2 px-3 fs-7" onclick="quickAsk('Explain the difficult concepts in simple terms')">
+                            <i class="bi bi-lightbulb"></i> Explain difficult concepts
+                        </button>
+                        <button class="btn btn-sm btn-premium-outline text-start py-2 px-3 fs-7" onclick="quickAsk('What topics should I focus on for the exam?')">
+                            <i class="bi bi-bullseye"></i> Exam focus areas
+                        </button>
+                        <button class="btn btn-sm btn-premium-outline text-start py-2 px-3 fs-7" onclick="quickAsk('Give me practice problems with solutions')">
+                            <i class="bi bi-pencil-square"></i> Practice problems
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h5 class="mb-3"><i class="bi bi-folder text-primary me-2"></i>Available Modules</h5>
+                    <div class="border-top pt-3">
+                        {% if materials %}
+                        {% for mat in materials %}
+                        <div class="d-flex align-items-center gap-2 py-2 {% if not loop.last %}border-bottom{% endif %}">
+                            <i class="bi bi-file-earmark-pdf text-danger"></i>
+                            <span class="fs-7 text-truncate">{{ mat.filename }}</span>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p class="text-muted fs-7 text-center py-3 mb-0">No materials uploaded yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+{% endblock %}
+
+{% block scripts %}
+<script>
+        const chatContainer = document.getElementById('chatContainer');
+        const questionInput = document.getElementById('questionInput');
+
+        function addBubble(text, isUser) {
+            const div = document.createElement('div');
+            div.className = 'chat-bubble ' + (isUser ? 'chat-user' : 'chat-ai');
+            if (isUser) {
+                div.textContent = text;
+            } else {
+                // Basic markdown-like formatting
+                div.innerHTML = '<strong><i class="bi bi-robot"></i> EduAI</strong><br>' +
+                    text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            }
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function addTyping() {
+            const div = document.createElement('div');
+            div.id = 'typingIndicator';
+            div.className = 'chat-bubble chat-ai';
+            div.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeTyping() {
+            const el = document.getElementById('typingIndicator');
+            if (el) el.remove();
+        }
+
+        function quickAsk(text) {
+            questionInput.value = text;
+            document.getElementById('researchForm').dispatchEvent(new Event('submit'));
+        }
+
+        async function askQuestion(e) {
+            e.preventDefault();
+            const question = questionInput.value.trim();
+            if (!question) return;
+
+            const materialId = document.getElementById('materialSelect').value;
+            addBubble(question, true);
+            questionInput.value = '';
+            document.getElementById('sendBtn').disabled = true;
+            addTyping();
+
+            try {
+                const formData = new FormData();
+                formData.append('material_id', materialId);
+                formData.append('question', question);
+
+                const res = await fetch('/research-lab/ask', { method: 'POST', body: formData });
+                const data = await res.json();
+                removeTyping();
+
+                if (data.error) {
+                    addBubble('⚠️ ' + data.error, false);
+                } else {
+                    addBubble(data.answer, false);
+                }
+            } catch (err) {
+                removeTyping();
+                addBubble('⚠️ Network error. Please try again.', false);
+            }
+            document.getElementById('sendBtn').disabled = false;
+            questionInput.focus();
+        }
+    </script>
+
+{% endblock %}

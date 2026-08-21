@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Configure Assessment — EduAI Pro{% endblock %}
+{% block content %}
+<main class="container my-5" style="max-width: 600px;">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('home') }}" class="btn btn-premium-outline px-3 py-2">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+            <div>
+                <h2 class="mb-0 text-truncate" style="max-width: 320px;">Quiz Settings</h2>
+                <p class="text-muted mb-0 fs-7">Custom generation parameters</p>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="text-center mb-4">
+                <div class="brand-logo-icon mx-auto mb-2" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                    <i class="bi bi-patch-question-fill"></i>
+                </div>
+                <h4>Generate Customized Quiz</h4>
+                <p class="text-muted fs-7">Select question intensity and density based on your syllabus notes.</p>
+            </div>
+
+            <form action="{{ url_for('quiz_take') }}" method="GET" id="quizConfigForm">
+                <input type="hidden" name="material_id" value="{{ material.id }}">
+
+                <!-- Difficulty Level Selection -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold"><i class="bi bi-speedometer2 text-primary me-1"></i> Choose Difficulty Level</label>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <input type="radio" name="difficulty" id="diffEasy" value="Easy" class="btn-check" checked>
+                            <label class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center gap-2" for="diffEasy">
+                                <i class="bi bi-emoji-smile fs-4"></i>
+                                <span class="fw-bold fs-7">Easy</span>
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <input type="radio" name="difficulty" id="diffMed" value="Medium" class="btn-check">
+                            <label class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center gap-2" for="diffMed">
+                                <i class="bi bi-lightbulb fs-4"></i>
+                                <span class="fw-bold fs-7">Medium</span>
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <input type="radio" name="difficulty" id="diffHard" value="Hard" class="btn-check">
+                            <label class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center gap-2" for="diffHard">
+                                <i class="bi bi-fire fs-4"></i>
+                                <span class="fw-bold fs-7">Hard</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Count Selection -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold"><i class="bi bi-list-ol text-primary me-1"></i> Number of Questions</label>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <input type="radio" name="count" id="count5" value="5" class="btn-check" checked>
+                            <label class="btn btn-outline-primary w-100 py-2" for="count5">
+                                <span class="fw-bold">5 Items</span>
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <input type="radio" name="count" id="count10" value="10" class="btn-check">
+                            <label class="btn btn-outline-primary w-100 py-2" for="count10">
+                                <span class="fw-bold">10 Items</span>
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <input type="radio" name="count" id="count20" value="20" class="btn-check">
+                            <label class="btn btn-outline-primary w-100 py-2" for="count20">
+                                <span class="fw-bold">20 Items</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Action -->
+                <button type="submit" class="btn-premium w-100 py-3 mt-2">
+                    Start Assessment <i class="bi bi-play-circle"></i>
+                </button>
+            </form>
+        </div>
+    </main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+        // Trigger loading screen upon quiz form submit
+        document.getElementById('quizConfigForm').addEventListener('submit', () => {
+            document.getElementById('loaderOverlay').classList.add('active');
+        });
+    </script>
+{% endblock %}

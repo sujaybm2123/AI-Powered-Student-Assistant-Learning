@@ -1,0 +1,534 @@
+{% extends 'base.html' %}
+{% block title %}EduAI Nexus — Intelligent Learning Ecosystem{% endblock %}
+{% block extra_head %}
+    <!-- Load PDF.js for browser-side text extraction on large files to bypass serverless constraints -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+{% endblock %}
+{% block content %}
+
+        <div class="container-fluid">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="display-6 fw-bold">Personalized Learning OS</h1>
+                    <p class="text-muted mb-0">Welcome back, {{ session.username }}. Here is your learning dashboard.</p>
+                </div>
+            </div>
+
+            <!-- Performance Stat Cards Row -->
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6 col-12">
+                    <div class="glass-card text-center py-3">
+                        <i class="bi bi-journal-check text-primary fs-2"></i>
+                        <h2 class="fw-bold mt-2 mb-0">{{ total_quizzes }}</h2>
+                        <span class="text-muted fs-7">Quizzes Taken</span>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 col-12">
+                    <div class="glass-card text-center py-3">
+                        <i class="bi bi-bar-chart-fill text-success fs-2"></i>
+                        <h2 class="fw-bold mt-2 mb-0">{{ avg_score }}%</h2>
+                        <span class="text-muted fs-7">Average Score</span>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 col-12">
+                    <div class="glass-card text-center py-3">
+                        <i class="bi bi-trophy-fill text-warning fs-2"></i>
+                        <h2 class="fw-bold mt-2 mb-0">{{ highest_score }}</h2>
+                        <span class="text-muted fs-7">Highest Score</span>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 col-12">
+                    <div class="glass-card text-center py-3">
+                        <i class="bi bi-graph-up-arrow fs-2 {% if improvement_rate >= 0 %}text-success{% else %}text-danger{% endif %}"></i>
+                        <h2 class="fw-bold mt-2 mb-0">{{ improvement_rate }}%</h2>
+                        <span class="text-muted fs-7">Improvement</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                
+                <!-- Col Left: Upload & Knowledge Modules -->
+                <div class="col-xl-5 col-lg-6 col-12">
+                    
+                    <!-- Upload Study Materials Card -->
+                    <div class="glass-card mb-4">
+                        <h4 class="mb-3"><i class="bi bi-cloud-arrow-up text-primary me-2"></i>Upload Materials</h4>
+                        <form id="pdfUploadForm" action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data">
+                            <!-- Accessible offscreen inputs to prevent programmatic click blocks in mobile browsers -->
+                            <input type="file" name="pdf" id="pdfFileInput" multiple accept=".pdf,.txt,.docx,.doc,.png,.jpg,.jpeg,.md" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">
+                            <input type="file" name="pdf" id="folderFileInput" webkitdirectory directory multiple style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">
+
+                            <label class="upload-dropzone w-100 d-block mb-0" id="dropzoneContainer" for="pdfFileInput" style="position: relative; cursor: pointer;">
+                                <div class="upload-dropzone-icon">
+                                    <i class="bi bi-cloud-arrow-up text-primary"></i>
+                                </div>
+                                <h5>Drag & Drop Files or Folders</h5>
+                                <p class="text-muted fs-7 mb-3">Supports PDF, Word, TXT, MD, PNG, JPG up to 32 MB</p>
+                                <div class="d-flex justify-content-center gap-2 mb-1" style="position: relative; z-index: 15;">
+                                    <span class="btn btn-sm btn-premium py-1 px-3" id="selectFilesBtn">
+                                        <i class="bi bi-folder-plus"></i> Browse Files
+                                    </span>
+                                </div>
+                            </label>
+                            <div class="file-name-display" id="selectedFileName">
+                                <i class="bi bi-file-earmark-arrow-up-fill"></i> <span id="fileTextName"></span>
+                            </div>
+                            <button type="submit" class="btn-premium w-100 mt-3" id="uploadSubmitBtn" disabled>
+                                Upload & Process <i class="bi bi-cpu"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Ingested Modules lists -->
+                    <div class="glass-card">
+                        <h4 class="mb-3"><i class="bi bi-folder-fill text-primary me-2"></i>Knowledge Modules</h4>
+                        <div class="border-top pt-3 d-flex flex-column gap-3">
+                            {% if materials %}
+                                {% for mat in materials %}
+                                    <div class="p-3 border rounded">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <strong class="text-truncate d-inline-block fs-7" style="max-width: 200px;">
+                                                <i class="bi bi-file-earmark-code text-primary"></i> {{ mat.filename }}
+                                            </strong>
+                                            <a href="{{ url_for('quiz_config', material_id=mat.id) }}" class="btn btn-sm btn-premium py-0 px-2 fs-8">
+                                                Generate Quiz
+                                            </a>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ url_for('summary', material_id=mat.id) }}" class="btn btn-sm btn-premium-outline py-0 px-2 fs-8">
+                                                Summary
+                                            </a>
+                                            <a href="{{ url_for('flashcards', material_id=mat.id) }}" class="btn btn-sm btn-premium-outline py-0 px-2 fs-8">
+                                                Flashcards
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-folder-plus fs-3"></i>
+                                    <p class="fs-8 mt-2 mb-0">No study modules indexed yet. Upload a PDF above.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Col Right: Analytics dashboard & history logs -->
+                <div class="col-xl-7 col-lg-6 col-12">
+                    
+                    <!-- Chart.js line charts -->
+                    <div class="glass-card mb-4">
+                        <h4 class="mb-3"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Performance Timeline</h4>
+                        <div class="border-top pt-3" style="position: relative; height: 280px;">
+                            <canvas id="scoreLineChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Quiz History -->
+                    <div class="glass-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0"><i class="bi bi-clock-history text-primary me-2"></i>Recent Quiz History</h4>
+                            {% if history %}
+                            <form action="{{ url_for('clear_history') }}" method="POST" onsubmit="return confirm('Clear all quiz history?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2 fs-8">
+                                    <i class="bi bi-trash3"></i> Clear
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        <div class="border-top pt-3">
+                            {% if history %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th class="fs-8 text-muted">File</th>
+                                                <th class="fs-8 text-muted">Difficulty</th>
+                                                <th class="fs-8 text-muted">Score</th>
+                                                <th class="fs-8 text-muted">%</th>
+                                                <th class="fs-8 text-muted">Readiness</th>
+                                                <th class="fs-8 text-muted">Date</th>
+                                                <th class="fs-8 text-muted">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for record in history[:10] %}
+                                            <tr>
+                                                <td class="fs-7 text-truncate" style="max-width: 120px;">{{ record.filename }}</td>
+                                                <td>
+                                                    <span class="badge {% if record.difficulty == 'Hard' %}bg-danger{% elif record.difficulty == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %} fs-8">
+                                                        {{ record.difficulty }}
+                                                    </span>
+                                                </td>
+                                                <td class="fs-7 font-monospace">{{ record.score }}/{{ record.total }}</td>
+                                                <td>
+                                                    <span class="fw-bold fs-7 {% if record.percentage >= 80 %}text-success{% elif record.percentage >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                                        {{ record.percentage }}%
+                                                    </span>
+                                                </td>
+                                                <td class="fs-7 font-monospace">{{ record.readiness_score or '-' }}</td>
+                                                <td class="fs-8 text-muted">{{ record.timestamp|format_datetime }}</td>
+                                                <td>
+                                                    <a href="{{ url_for('study_plan', result_id=record.id) }}" class="btn btn-sm btn-premium-outline py-0 px-1 fs-8" title="Study Plan">
+                                                        <i class="bi bi-book"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-clipboard-data fs-3"></i>
+                                    <p class="fs-8 mt-2 mb-0">No quiz history yet. Upload a PDF and take a quiz to track progress.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        </div>
+    
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+
+        function logDebug(msg) { console.log(msg); }
+
+
+
+        // ---- File Upload Actions ----
+        const pdfFileInput = document.getElementById('pdfFileInput');
+        const folderFileInput = document.getElementById('folderFileInput');
+        const selectedFileName = document.getElementById('selectedFileName');
+        const fileTextName = document.getElementById('fileTextName');
+        const uploadSubmitBtn = document.getElementById('uploadSubmitBtn');
+        const dropzone = document.getElementById('dropzoneContainer');
+        const selectFilesBtn = document.getElementById('selectFilesBtn');
+
+        if (dropzone && pdfFileInput && folderFileInput) {
+            logDebug('File and folder upload elements successfully initialized');
+
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // Visual indicators for dragging over
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => dropzone.classList.add('highlight'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => dropzone.classList.remove('highlight'), false);
+            });
+
+            // Recursive folder scanner
+            async function scanFiles(items) {
+                const files = [];
+                const queue = [];
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
+                    if (item.kind === 'file') {
+                        const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+                        if (entry) {
+                            queue.push(entry);
+                        } else {
+                            const file = item.getAsFile();
+                            if (file) files.push(file);
+                        }
+                    }
+                }
+
+                while (queue.length > 0) {
+                    const entry = queue.shift();
+                    if (entry.isFile) {
+                        const file = await new Promise((resolve) => entry.file(resolve));
+                        files.push(file);
+                    } else if (entry.isDirectory) {
+                        const reader = entry.createReader();
+                        const readEntries = () => {
+                            return new Promise((resolve) => {
+                                reader.readEntries((entries) => resolve(entries), () => resolve([]));
+                            });
+                        };
+                        let dirEntries = await readEntries();
+                        queue.push(...dirEntries);
+                    }
+                }
+                return files;
+            }
+
+            // Handle dropping files directly
+            dropzone.addEventListener('drop', async function(e) {
+                logDebug('Item(s) dropped on dropzone');
+                const dt = e.dataTransfer;
+                if (dt.items && dt.items.length > 0) {
+                    const files = await scanFiles(dt.items);
+                    if (files.length > 0) {
+                        const dataTransfer = new DataTransfer();
+                        files.forEach(file => dataTransfer.items.add(file));
+                        pdfFileInput.files = dataTransfer.files;
+                        folderFileInput.value = '';
+                        
+                        const event = new Event('change');
+                        pdfFileInput.dispatchEvent(event);
+                    }
+                } else if (dt.files && dt.files.length > 0) {
+                    pdfFileInput.files = dt.files;
+                    folderFileInput.value = '';
+                    
+                    const event = new Event('change');
+                    pdfFileInput.dispatchEvent(event);
+                }
+            }, false);
+        } else {
+            logDebug('WARNING: File upload, folder upload, or dropzone elements missing in DOM!');
+        }
+
+        function handleFilesSelection(files) {
+            logDebug('File selection changed. Total files: ' + files.length);
+            if (files.length > 0) {
+                // Calculate total size of all selected files
+                let totalSize = 0;
+                for (let i = 0; i < files.length; i++) {
+                    totalSize += files[i].size;
+                }
+
+                // Allow uploading up to 100MB on all platforms
+                const isVercel = window.location.hostname.includes('vercel.app');
+                const maxSizeLimit = 100 * 1024 * 1024; // 100 MB
+                
+                if (totalSize > maxSizeLimit) {
+                    alert(`The selected file(s) total size is ${(totalSize / (1024 * 1024)).toFixed(2)} MB. The maximum allowed upload size is 100 MB.\n\nPlease select smaller file(s).`);
+                    
+                    // Reset inputs
+                    if (pdfFileInput) pdfFileInput.value = '';
+                    if (folderFileInput) folderFileInput.value = '';
+                    if (fileTextName) fileTextName.textContent = '';
+                    if (selectedFileName) selectedFileName.style.display = 'none';
+                    if (uploadSubmitBtn) uploadSubmitBtn.disabled = true;
+                    return;
+                }
+
+                if (isVercel && totalSize > 4.5 * 1024 * 1024) {
+                    console.warn("Uploading files larger than 4.5 MB on Vercel free tier serverless might get rejected by Vercel's gateway limits.");
+                }
+
+                let nameText = '';
+                if (files.length === 1) {
+                    nameText = files[0].name;
+                } else {
+                    nameText = files.length + ' file(s) selected';
+                }
+                if (fileTextName) fileTextName.textContent = nameText;
+                if (selectedFileName) selectedFileName.style.display = 'inline-flex';
+                if (uploadSubmitBtn) {
+                    uploadSubmitBtn.disabled = false;
+                    logDebug('Submit button disabled state set to false (button is now active)');
+                }
+            }
+        }
+
+        if (pdfFileInput) {
+            pdfFileInput.addEventListener('change', function() {
+                if (this.files.length > 0 && folderFileInput) {
+                    folderFileInput.value = '';
+                }
+                handleFilesSelection(this.files);
+            });
+        }
+
+        if (folderFileInput) {
+            folderFileInput.addEventListener('change', function() {
+                if (this.files.length > 0 && pdfFileInput) {
+                    pdfFileInput.value = '';
+                }
+                handleFilesSelection(this.files);
+            });
+        }
+
+        // Configure PDF.js worker
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        }
+
+        async function extractTextFromPDF(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(" ");
+                    fullText += pageText + "\n";
+                }
+                return fullText;
+            } catch (err) {
+                console.error("PDF.js extraction error:", err);
+                throw new Error("Failed to parse PDF document structure. Make sure the file is not corrupted.");
+            }
+        }
+
+        const uploadForm = document.getElementById('pdfUploadForm');
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', async function(e) {
+                let filesCount = 0;
+                if (pdfFileInput && pdfFileInput.files) filesCount += pdfFileInput.files.length;
+                if (folderFileInput && folderFileInput.files) filesCount += folderFileInput.files.length;
+
+                if (filesCount === 0) {
+                    e.preventDefault();
+                    alert('Please select a file first.');
+                    return;
+                }
+
+                // If on Vercel and file is larger than 4.5MB, check if we can optimize it
+                const isVercel = window.location.hostname.includes('vercel.app');
+                
+                let totalSize = 0;
+                const filesToProcess = [];
+                if (pdfFileInput && pdfFileInput.files) {
+                    for (let i = 0; i < pdfFileInput.files.length; i++) {
+                        const file = pdfFileInput.files[i];
+                        totalSize += file.size;
+                        filesToProcess.push(file);
+                    }
+                }
+
+                if (isVercel && totalSize > 4.5 * 1024 * 1024) {
+                    // Prevent immediate submit to allow async text extraction
+                    e.preventDefault();
+                    
+                    logDebug('Large file upload detected on Vercel. Activating browser text extraction...');
+                    const loader = document.getElementById('loaderOverlay');
+                    if (loader) {
+                        loader.querySelector('h4').textContent = 'Extracting Text...';
+                        loader.querySelector('p').textContent = 'Extracting plain text from your PDF directly in the browser to bypass Vercel serverless limits.';
+                        loader.classList.add('active');
+                    }
+
+                    try {
+                        const dataTransfer = new DataTransfer();
+                        
+                        for (let file of filesToProcess) {
+                            const ext = file.name.split('.').pop().toLowerCase();
+                            if (ext === 'pdf' && file.size > 4.5 * 1024 * 1024) {
+                                logDebug('Extracting text from PDF: ' + file.name);
+                                const text = await extractTextFromPDF(file);
+                                if (!text || text.trim().length === 0) {
+                                    const proceed = confirm(`The PDF file '${file.name}' appears to be a scanned document (no selectable text layer).\n\nBrowser-side text extraction cannot optimize it. Uploading the original large file might fail on Vercel due to the 4.5 MB serverless limit.\n\nWould you like to try uploading the original file anyway?`);
+                                    if (!proceed) {
+                                        throw new Error(`Upload of '${file.name}' cancelled because it is a scanned document and exceeds Vercel limits.`);
+                                    }
+                                    dataTransfer.items.add(file);
+                                } else {
+                                    // Create a lightweight text File object representing the plain text
+                                    const textFile = new File([text], file.name.replace(/\.pdf$/i, '') + '.txt', { type: 'text/plain' });
+                                    dataTransfer.items.add(textFile);
+                                }
+                            } else if (file.size > 4.5 * 1024 * 1024) {
+                                // Non-PDF files larger than 4.5MB cannot be optimized in-browser and will fail on Vercel
+                                throw new Error(`The file '${file.name}' is ${(file.size / (1024 * 1024)).toFixed(2)} MB. Vercel Serverless hosting restricts uploads to 4.5 MB. Please upload a smaller file or run the application locally.`);
+                            } else {
+                                dataTransfer.items.add(file);
+                            }
+                        }
+
+                        // Swap original files with lightweight text files
+                        pdfFileInput.files = dataTransfer.files;
+                        logDebug('Files successfully optimized for Vercel, submitting...');
+                        
+                        // Submit form programmatically (bypasses submit event listener, avoiding loop)
+                        uploadForm.submit();
+
+                    } catch (err) {
+                        console.error('Browser-side processing failed:', err);
+                        alert(`Vercel Upload Limit Optimization Failed:\n\n${err.message || err}\n\nTip: For scanned/non-searchable PDFs or files above 4.5 MB, please run the application locally or compress your files.`);
+                        if (loader) {
+                            loader.querySelector('h4').textContent = 'Processing...';
+                            loader.querySelector('p').textContent = 'Please wait while EduAI performs the operation.';
+                            loader.classList.remove('active');
+                        }
+                    }
+                } else {
+                    logDebug('Form submitted natively.');
+                }
+            });
+        }
+
+        // ---- Chart.js score timeline loading ----
+        let chartInstance = null;
+        function updateChartColors() {
+            if (!chartInstance) return;
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const color = isDark ? '#f3f4f6' : '#0f172a';
+            const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+
+            chartInstance.options.scales.x.ticks.color = color;
+            chartInstance.options.scales.y.ticks.color = color;
+            chartInstance.options.scales.x.grid.color = gridColor;
+            chartInstance.options.scales.y.grid.color = gridColor;
+            chartInstance.options.plugins.legend.labels.color = color;
+            chartInstance.update();
+        }
+
+        fetch('/api/analytics')
+            .then(res => res.json())
+            .then(data => {
+                const ctx = document.getElementById('scoreLineChart').getContext('2d');
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'Score Timeline (%)',
+                                data: data.scores,
+                                borderColor: '#2563eb',
+                                backgroundColor: 'rgba(37, 99, 235, 0.05)',
+                                borderWidth: 3,
+                                tension: 0.3,
+                                fill: true
+                            },
+                            {
+                                label: 'Readiness (%)',
+                                data: data.readiness,
+                                borderColor: '#8b5cf6',
+                                backgroundColor: 'rgba(139, 92, 246, 0.05)',
+                                borderWidth: 3,
+                                tension: 0.3,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { min: 0, max: 100 }
+                        }
+                    }
+                });
+                updateChartColors();
+            });
+    </script>
+{% endblock %}

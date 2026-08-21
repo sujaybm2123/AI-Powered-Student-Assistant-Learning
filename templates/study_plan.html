@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Personalized Study Roadmap — EduAI Pro{% endblock %}
+{% block content %}
+<main class="container my-5" style="max-width: 800px;">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('home') }}" class="btn btn-premium-outline px-3 py-2">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+            <div>
+                <h2 class="mb-0 text-truncate" style="max-width: 480px;">Personalized Study Plans</h2>
+                <p class="text-muted mb-0 fs-7">Roadmaps based on diagnostic weak topics for: {{ filename }}</p>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <!-- Duration selection custom tabs -->
+            <div class="tabs-custom">
+                <button class="tab-custom-btn active" onclick="switchPlan(event, 'plan1d')">
+                    <i class="bi bi-lightning-charge"></i> 1-Day Plan
+                </button>
+                <button class="tab-custom-btn" onclick="switchPlan(event, 'plan3d')">
+                    <i class="bi bi-calendar3"></i> 3-Day Plan
+                </button>
+                <button class="tab-custom-btn" onclick="switchPlan(event, 'plan7d')">
+                    <i class="bi bi-calendar-range"></i> 7-Day Plan
+                </button>
+            </div>
+
+            <!-- Tab Panels -->
+            <div id="plan1d" class="plan-panel active">
+                <h4 class="mb-4 text-primary"><i class="bi bi-clock-history"></i> Daily Study Routine</h4>
+                {% if plan_1d %}
+                    <div class="ps-2">
+                        {% for task in plan_1d %}
+                            <div class="timeline-item">
+                                <div class="fs-6 fw-bold text-main">{{ task.split(':', 1)[0] if ':' in task else 'Task' }}</div>
+                                <p class="text-muted fs-7 mt-1">{{ task.split(':', 1)[1] if ':' in task else task }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No study plan tasks generated.</p>
+                {% endif %}
+            </div>
+
+            <div id="plan3d" class="plan-panel d-none">
+                <h4 class="mb-4 text-primary"><i class="bi bi-calendar-event"></i> 3-Day Conceptual Sprint</h4>
+                {% if plan_3d %}
+                    <div class="ps-2">
+                        {% for task in plan_3d %}
+                            <div class="timeline-item">
+                                <div class="fs-6 fw-bold text-main">{{ task.split(':', 1)[0] if ':' in task else 'Session' }}</div>
+                                <p class="text-muted fs-7 mt-1">{{ task.split(':', 1)[1] if ':' in task else task }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No study plan tasks generated.</p>
+                {% endif %}
+            </div>
+
+            <div id="plan7d" class="plan-panel d-none">
+                <h4 class="mb-4 text-primary"><i class="bi bi-calendar-week"></i> 7-Day Mastery Curriculum</h4>
+                {% if plan_7d %}
+                    <div class="ps-2">
+                        {% for task in plan_7d %}
+                            <div class="timeline-item">
+                                <div class="fs-6 fw-bold text-main">{{ task.split(':', 1)[0] if ':' in task else 'Week Goal' }}</div>
+                                <p class="text-muted fs-7 mt-1">{{ task.split(':', 1)[1] if ':' in task else task }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No study plan tasks generated.</p>
+                {% endif %}
+            </div>
+
+        </div>
+    </main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+        // Tab Switching Logic
+        function switchPlan(evt, planId) {
+            document.querySelectorAll('.tab-custom-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.plan-panel').forEach(panel => panel.classList.add('d-none'));
+
+            evt.currentTarget.classList.add('active');
+            document.getElementById(planId).classList.remove('d-none');
+        }
+    </script>
+
+{% endblock %}

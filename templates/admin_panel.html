@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Admin Panel — EduAI Nexus{% endblock %}
+{% block content %}
+<div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold"><i class="bi bi-shield-lock text-primary"></i> Admin Panel</h1>
+            <p class="text-muted">System management and analytics overview</p>
+        </div>
+
+        <!-- System Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card text-center py-3">
+                    <i class="bi bi-file-earmark-pdf text-danger fs-2"></i>
+                    <h2 class="fw-bold mt-2 mb-0">{{ total_materials }}</h2>
+                    <span class="text-muted fs-7">Materials</span>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card text-center py-3">
+                    <i class="bi bi-card-text text-primary fs-2"></i>
+                    <h2 class="fw-bold mt-2 mb-0">{{ total_flashcards }}</h2>
+                    <span class="text-muted fs-7">Flashcards</span>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card text-center py-3">
+                    <i class="bi bi-journal-check text-success fs-2"></i>
+                    <h2 class="fw-bold mt-2 mb-0">{{ total_quizzes }}</h2>
+                    <span class="text-muted fs-7">Quizzes Taken</span>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card text-center py-3">
+                    <i class="bi bi-bar-chart-fill text-warning fs-2"></i>
+                    <h2 class="fw-bold mt-2 mb-0">{{ avg_pct }}%</h2>
+                    <span class="text-muted fs-7">Avg Score</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Materials Management -->
+            <div class="col-lg-5">
+                <div class="glass-card">
+                    <h5 class="mb-3"><i class="bi bi-folder-fill text-primary me-2"></i>Materials Management</h5>
+                    <div class="border-top pt-3">
+                        {% if materials %}
+                        <div class="d-flex flex-column gap-2">
+                            {% for mat in materials %}
+                            <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                                <div class="text-truncate me-2" style="max-width: 200px;">
+                                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                    <span class="fs-7">{{ mat.filename }}</span>
+                                </div>
+                                <div class="d-flex gap-1 align-items-center">
+                                    <span class="text-muted fs-8">{{ mat.created_at|format_datetime }}</span>
+                                    <form action="{{ url_for('delete_material', material_id=mat.id) }}" method="POST" 
+                                          onsubmit="return confirm('Delete {{ mat.filename }}?');" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1 fs-8">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center py-3 mb-0 fs-7">No materials uploaded yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Quiz Results -->
+            <div class="col-lg-7">
+                <div class="glass-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-clock-history text-primary me-2"></i>Recent Results</h5>
+                        <form action="{{ url_for('clear_history') }}" method="POST" onsubmit="return confirm('Clear ALL quiz history?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2 fs-8">
+                                <i class="bi bi-trash3"></i> Clear All
+                            </button>
+                        </form>
+                    </div>
+                    <div class="border-top pt-3">
+                        {% if recent_results %}
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="fs-8 text-muted">User</th>
+                                        <th class="fs-8 text-muted">File</th>
+                                        <th class="fs-8 text-muted">Difficulty</th>
+                                        <th class="fs-8 text-muted">Score</th>
+                                        <th class="fs-8 text-muted">%</th>
+                                        <th class="fs-8 text-muted">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for r in recent_results %}
+                                    <tr>
+                                        <td class="fs-7">{{ r.username }}</td>
+                                        <td class="fs-7 text-truncate" style="max-width: 100px;">{{ r.filename }}</td>
+                                        <td>
+                                            <span class="badge {% if r.difficulty == 'Hard' %}bg-danger{% elif r.difficulty == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %} fs-8">
+                                                {{ r.difficulty }}
+                                            </span>
+                                        </td>
+                                        <td class="fs-7 font-monospace">{{ r.score }}/{{ r.total }}</td>
+                                        <td class="fw-bold fs-7 {% if r.percentage >= 80 %}text-success{% elif r.percentage >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ r.percentage }}%</td>
+                                        <td class="fs-8 text-muted">{{ r.timestamp|format_datetime }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center py-3 mb-0 fs-7">No quiz results recorded yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}
